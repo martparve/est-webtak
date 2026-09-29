@@ -40,6 +40,14 @@ test('a point shared to MUHV-TAARA from CloudTAK reaches the TAK server mission'
     const mission = missions.items.find((m) => m.name === MISSION);
     expect(mission, `${MISSION} listed`).toBeTruthy();
 
+    // Leftovers from earlier E2E_KEEP runs must not accumulate on the feed
+    const before = await (await request.get(`${baseURL}/api/marti/missions/${mission!.guid}/cot`, { headers: auth })).json() as { features?: Array<{ id: string; properties: { callsign?: string } }> };
+    for (const old of before.features || []) {
+        if (old.properties.callsign?.startsWith('CLOUDTAK-SYNC-')) {
+            await request.delete(`${baseURL}/api/marti/missions/${mission!.guid}/cot/${old.id}`, { headers: auth }).catch(() => undefined);
+        }
+    }
+
     const id = crypto.randomUUID();
     const now = new Date();
     const feat = {
@@ -78,7 +86,10 @@ test('a point shared to MUHV-TAARA from CloudTAK reaches the TAK server mission'
     console.log(`marker ${CALLSIGN} (${id}) is on the server mission`);
 
     if (process.env.E2E_KEEP !== '1') {
+        // OpenTAKServer 1.7.13 answers the mission content delete with 401
+        // (mission token mismatch), so cleanup is best effort here and the
+        // marker may have to be removed from an ATAK or the OTS web UI.
         const del = await request.delete(`${baseURL}/api/marti/missions/${mission!.guid}/cot/${id}`, { headers: auth });
-        expect(del.ok(), `cleanup delete: ${del.status()}`).toBeTruthy();
+        if (!del.ok()) console.warn(`cleanup delete of ${CALLSIGN} failed: ${del.status()}`);
     }
 });
