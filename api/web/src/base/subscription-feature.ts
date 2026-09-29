@@ -273,7 +273,10 @@ export default class SubscriptionFeature {
                     mission: this.parent.name
                 }];
             } else {
+                // TAK Server resolves either attribute; OpenTAKServer only
+                // reads the name, so a guid-only dest is silently dropped.
                 feat.properties.dest = [{
+                    mission: this.parent.name,
                     'mission-guid': this.parent.guid
                 }];
             }

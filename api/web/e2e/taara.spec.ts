@@ -171,8 +171,8 @@ test.describe('TAARA CloudTAK', () => {
         test.skip(!me.system_admin, 'E2E user is not a system admin');
 
         await page.goto('/admin');
-        await expect(page.getByText('TAK Server Connection')).toBeVisible();
-        await page.getByText('TAK Server Connection').click();
+        await expect(page.getByText('TAK Server Connection', { exact: true })).toBeVisible();
+        await page.getByText('TAK Server Connection', { exact: true }).click();
         await expect(page.getByText(/opentakserver/i).first()).toBeVisible();
     });
 });
